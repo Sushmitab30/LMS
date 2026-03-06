@@ -1,29 +1,11 @@
 import { prisma } from '../../config/db';
 
-// Define types locally to avoid Prisma client dependency issues
-type SectionType = {
-  id: number;
-  subjectId: number;
-  title: string;
-  orderIndex: number;
-  createdAt: Date;
-  updatedAt: Date;
-};
-
-type VideoType = {
-  id: number;
-  sectionId: number;
-  title: string;
-  description: string | null;
-  youtubeUrl: string;
-  orderIndex: number;
-  durationSeconds: number;
-  createdAt: Date;
-  updatedAt: Date;
-};
-
-type SectionWithVideos = SectionType & { videos: VideoType[] };
-type VideoProgressItem = { videoId: number; isCompleted: boolean };
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type AnySection = any;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type AnyVideo = any;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type AnyProgress = any;
 
 export async function findAllPublishedSubjects(page: number, pageSize: number, search?: string) {
   const where = {
@@ -126,7 +108,7 @@ export async function findSubjectTree(subjectId: number, userId?: number) {
   // Get user's progress for all videos if userId provided
   let progressMap: Map<string, boolean> = new Map();
   if (userId) {
-    const videoIds = subject.sections.flatMap((s: SectionWithVideos) => s.videos.map((v: VideoType) => v.id));
+    const videoIds = subject.sections.flatMap((s: AnySection) => s.videos.map((v: AnyVideo) => v.id));
     const progress = await prisma.videoProgress.findMany({
       where: {
         userId,
@@ -137,13 +119,13 @@ export async function findSubjectTree(subjectId: number, userId?: number) {
         isCompleted: true,
       },
     });
-    progressMap = new Map(progress.map((p: VideoProgressItem) => [p.videoId.toString(), p.isCompleted]));
+    progressMap = new Map(progress.map((p: AnyProgress) => [p.videoId.toString(), p.isCompleted]));
   }
 
   // Flatten all videos to calculate locked status
   const allVideos: { id: string; sectionId: string; orderIndex: number }[] = [];
-  subject.sections.forEach((section: SectionWithVideos) => {
-    section.videos.forEach((video: VideoType) => {
+  subject.sections.forEach((section: AnySection) => {
+    section.videos.forEach((video: AnyVideo) => {
       allVideos.push({
         id: video.id.toString(),
         sectionId: section.id.toString(),
@@ -154,8 +136,8 @@ export async function findSubjectTree(subjectId: number, userId?: number) {
 
   // Sort by section order, then video order
   allVideos.sort((a, b) => {
-    const sectionA = subject.sections.find((s: SectionWithVideos) => s.id.toString() === a.sectionId)!;
-    const sectionB = subject.sections.find((s: SectionWithVideos) => s.id.toString() === b.sectionId)!;
+    const sectionA = subject.sections.find((s: AnySection) => s.id.toString() === a.sectionId)!;
+    const sectionB = subject.sections.find((s: AnySection) => s.id.toString() === b.sectionId)!;
     if (sectionA.orderIndex !== sectionB.orderIndex) {
       return sectionA.orderIndex - sectionB.orderIndex;
     }
@@ -180,11 +162,11 @@ export async function findSubjectTree(subjectId: number, userId?: number) {
     slug: subject.slug,
     description: subject.description,
     thumbnail: subject.thumbnail,
-    sections: subject.sections.map((section: SectionWithVideos) => ({
+    sections: subject.sections.map((section: AnySection) => ({
       id: section.id.toString(),
       title: section.title,
       orderIndex: section.orderIndex,
-      videos: section.videos.map((video: VideoType) => ({
+      videos: section.videos.map((video: AnyVideo) => ({
         id: video.id.toString(),
         title: video.title,
         orderIndex: video.orderIndex,
