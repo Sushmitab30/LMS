@@ -1,8 +1,9 @@
 import { Router } from 'express';
+import type { Router as RouterType } from 'express';
 import { listSubjects, getSubject, getTree, getFirstVideoHandler } from './subject.controller';
 import { authenticate, optionalAuth } from '../../middleware/authenticate';
 
-const router = Router();
+const router: RouterType = Router();
 
 router.get('/', optionalAuth, listSubjects);
 router.get('/:id', optionalAuth, getSubject);

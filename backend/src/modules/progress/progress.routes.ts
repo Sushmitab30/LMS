@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import type { Router as RouterType } from 'express';
 import {
   getSubjectProgressHandler,
   getVideoProgressHandler,
@@ -6,7 +7,7 @@ import {
 } from './progress.controller';
 import { authenticate } from '../../middleware/authenticate';
 
-const router = Router();
+const router: RouterType = Router();
 
 router.get('/subjects/:id', authenticate, getSubjectProgressHandler);
 router.get('/videos/:id', authenticate, getVideoProgressHandler);

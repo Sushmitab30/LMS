@@ -1,8 +1,9 @@
 import { Router } from 'express';
+import type { Router as RouterType } from 'express';
 import { getVideo } from './video.controller';
 import { authenticate } from '../../middleware/authenticate';
 
-const router = Router();
+const router: RouterType = Router();
 
 router.get('/:id', authenticate, getVideo);
 
