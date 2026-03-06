@@ -1,8 +1,29 @@
 import { prisma } from '../../config/db';
-import { Section, Video, VideoProgress } from '@prisma/client';
 
-type SectionWithVideos = Section & { videos: Video[] };
-type VideoProgressItem = Pick<VideoProgress, 'videoId' | 'isCompleted'>;
+// Define types locally to avoid Prisma client dependency issues
+type SectionType = {
+  id: number;
+  subjectId: number;
+  title: string;
+  orderIndex: number;
+  createdAt: Date;
+  updatedAt: Date;
+};
+
+type VideoType = {
+  id: number;
+  sectionId: number;
+  title: string;
+  description: string | null;
+  youtubeUrl: string;
+  orderIndex: number;
+  durationSeconds: number;
+  createdAt: Date;
+  updatedAt: Date;
+};
+
+type SectionWithVideos = SectionType & { videos: VideoType[] };
+type VideoProgressItem = { videoId: number; isCompleted: boolean };
 
 export async function findAllPublishedSubjects(page: number, pageSize: number, search?: string) {
   const where = {
@@ -105,7 +126,7 @@ export async function findSubjectTree(subjectId: number, userId?: number) {
   // Get user's progress for all videos if userId provided
   let progressMap: Map<string, boolean> = new Map();
   if (userId) {
-    const videoIds = subject.sections.flatMap((s: SectionWithVideos) => s.videos.map((v: Video) => v.id));
+    const videoIds = subject.sections.flatMap((s: SectionWithVideos) => s.videos.map((v: VideoType) => v.id));
     const progress = await prisma.videoProgress.findMany({
       where: {
         userId,
@@ -122,7 +143,7 @@ export async function findSubjectTree(subjectId: number, userId?: number) {
   // Flatten all videos to calculate locked status
   const allVideos: { id: string; sectionId: string; orderIndex: number }[] = [];
   subject.sections.forEach((section: SectionWithVideos) => {
-    section.videos.forEach((video: Video) => {
+    section.videos.forEach((video: VideoType) => {
       allVideos.push({
         id: video.id.toString(),
         sectionId: section.id.toString(),
@@ -163,7 +184,7 @@ export async function findSubjectTree(subjectId: number, userId?: number) {
       id: section.id.toString(),
       title: section.title,
       orderIndex: section.orderIndex,
-      videos: section.videos.map((video: Video) => ({
+      videos: section.videos.map((video: VideoType) => ({
         id: video.id.toString(),
         title: video.title,
         orderIndex: video.orderIndex,

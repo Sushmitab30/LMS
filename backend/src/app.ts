@@ -1,4 +1,4 @@
-import express from 'express';
+import express, { Express } from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import cookieParser from 'cookie-parser';
@@ -11,7 +11,7 @@ import subjectRoutes from './modules/subjects/subject.routes';
 import videoRoutes from './modules/videos/video.routes';
 import progressRoutes from './modules/progress/progress.routes';
 
-const app = express();
+const app: Express = express();
 
 // Security middleware
 app.use(helmet());

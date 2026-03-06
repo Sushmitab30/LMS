@@ -1,5 +1,13 @@
 import { prisma } from '../../config/db';
 
+type SectionWithVideos = { id: number; videos: { id: number }[] };
+type ProgressItem = {
+  videoId: number;
+  isCompleted: boolean;
+  lastPositionSeconds: number;
+  updatedAt: Date;
+};
+
 export async function findSubjectProgress(subjectId: number, userId: number) {
   // Get all videos in the subject
   const subject = await prisma.subject.findUnique({
@@ -19,7 +27,7 @@ export async function findSubjectProgress(subjectId: number, userId: number) {
 
   if (!subject) return null;
 
-  const videoIds = subject.sections.flatMap(s => s.videos.map(v => v.id));
+  const videoIds = subject.sections.flatMap((s: SectionWithVideos) => s.videos.map((v: { id: number }) => v.id));
 
   // Get progress for all videos
   const progress = await prisma.videoProgress.findMany({
@@ -35,13 +43,13 @@ export async function findSubjectProgress(subjectId: number, userId: number) {
     },
   });
 
-  const completedVideos = progress.filter(p => p.isCompleted).length;
+  const completedVideos = progress.filter((p: ProgressItem) => p.isCompleted).length;
   const totalVideos = videoIds.length;
   const percentComplete = totalVideos > 0 ? Math.round((completedVideos / totalVideos) * 100) : 0;
 
   // Find the last watched video (most recently updated)
   const lastProgress = progress.length > 0
-    ? progress.reduce((latest, current) => 
+    ? progress.reduce((latest: ProgressItem, current: ProgressItem) => 
         current.updatedAt > latest.updatedAt ? current : latest
       )
     : null;
